@@ -26,11 +26,6 @@ def main():
   else:
     sys.exit("We didn't find any matching torrents.")
 
-  response = urllib2.urlopen(torrenturl)
-  html = response.read()
-  f = open(torrentfn,'w')
-  f.write(html)
-  f.close
 
   path = os.path.join(tvdir,os.path.join(show,'torrents'))
   try:
@@ -39,6 +34,12 @@ def main():
     if exc.errno == errno.EEXIST and os.path.isdir(path):
       pass
     else: raise
+
+  response = urllib2.urlopen(torrenturl)
+  html = response.read()
+  f = open(os.path.join(path,torrentfn),'w')
+  f.write(html)
+  f.close
 
 if __name__ == "__main__":
     main()
