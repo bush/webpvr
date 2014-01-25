@@ -1,9 +1,12 @@
 import urllib2
 import re
+import os, errno
 
 def main():
  
   # TODO: Add all failure paths
+  tvdir = "/media/windowsshare/downloads/completed/TV"
+  show = "Modern Family"
 
   response = urllib2.urlopen('http://extratorrent.cc/rss.xml?type=last&cid=632')
   html = response.read()
@@ -16,27 +19,26 @@ def main():
       torrenturl = match.groups()[0]
       break
 
-  # Save the torrent
-  print torrenturl
-  match = re.search('\/([^\/]*\.torrent)',torrenturl)
+  # Pull to torrent url out of the feed
+  match = re.search('\/([^\/]*\.torrent)',torrenturl) 
   if match:
-    fn = match.groups()[0]
-    print fn
-  exit
+    torrentfn = match.groups()[0]
+  else:
+    sys.exit("We didn't find any matching torrents.")
+
   response = urllib2.urlopen(torrenturl)
   html = response.read()
-  f = open(fn,'w')
+  f = open(torrentfn,'w')
   f.write(html)
   f.close
- # print html
 
-  # Check if the torrent alread exists, add it if it does not
-  
-
-  # Clean up torrents that are a few days old 
-
-
- 
+  path = os.path.join(tvdir,os.path.join(show,'torrents'))
+  try:
+    os.makedirs(path)
+  except OSError as exc: # Python >2.5
+    if exc.errno == errno.EEXIST and os.path.isdir(path):
+      pass
+    else: raise
 
 if __name__ == "__main__":
     main()
