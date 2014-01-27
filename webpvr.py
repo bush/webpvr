@@ -28,46 +28,49 @@ def get_torrent_url(feedurl):
 def main():
  
   # TODO: Add all failure paths
-  tvdir = "/media/windowsshare/downloads/completed/TV"
-  show = "Modern Family"
-  feeds = [
+  TVDIR = "/media/windowsshare/downloads/completed/TV"
+  FEEDS = [
       {'site': 'extratorrent', 'show': 'Modern Family', 'encoding': 'XviD', 'signature': 'ettv', 'url': 'http://extratorrent.cc/rss.xml?type=last&cid=632'},
       ]
 
-  for feed_entry in feeds:
+  for feed_entry in FEEDS:
   
+    # Extract the torrent url
     feed = feedparser.parse(feed_entry['url'])
-
     for item in feed["items"]:  
+
       torrent_url = item['links'][1]['href']
       
-      if re.search('XviD',torrent_url) and re.search('ettv',torrent_url):
+      if re.search(feed_entry['encoding'],torrent_url) and re.search(feed_entry['signature'],torrent_url):
          break
 
     torrent_fn = torrent_url.split('/')[-1] 
-    print torrent_fn
 
+    # Create the torrent directory if it does not exist
+    path = os.path.join(TVDIR,os.path.join(feed_entry['show'],'torrents'))
+    try:
+      os.makedirs(path)
+    except OSError as exc: # Python >2.5
+      if exc.errno == errno.EEXIST and os.path.isdir(path):
+        pass
+      else: raise
+    
+    # Move on if we already downloaded the torrent file
+    if os.path.isfile(os.path.join(path,torrent_fn))
+      print "We already got this one, moving on ..."
+      continue
 
-  sys.exit()
+    # Download the torrent
+    response = urllib2.urlopen(torrenturl)
+    html = response.read()
+    f = open(os.path.join(path,torrentfn),'w')
+    f.write(html)
+    f.close
 
-
-
-  path = os.path.join(tvdir,os.path.join(show,'torrents'))
-  try:
-    os.makedirs(path)
-  except OSError as exc: # Python >2.5
-    if exc.errno == errno.EEXIST and os.path.isdir(path):
-      pass
-    else: raise
-
-  # Check if we already have the torrent
-
-
-  response = urllib2.urlopen(torrenturl)
-  html = response.read()
-  f = open(os.path.join(path,torrentfn),'w')
-  f.write(html)
-  f.close
+   # Add the torrent
+   cmd = 'transmission-remote -a %s' % os.path.join(path,torrentfn)
+   print cmd
+   #os.system(cmd) 
 
 if __name__ == "__main__":
     main()
