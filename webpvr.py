@@ -1,7 +1,11 @@
+#!/usr/bin/python
+
 import urllib2
 import re
 import sys, os, errno
+import feedparser
 
+# Unused, replaced with the feedparser module
 def get_torrent_url(feedurl):
   response = urllib2.urlopen(feedurl)
   html = response.read()
@@ -30,13 +34,18 @@ def main():
       {'site': 'extratorrent', 'show': 'Modern Family', 'encoding': 'XviD', 'signature': 'ettv', 'url': 'http://extratorrent.cc/rss.xml?type=last&cid=632'},
       ]
 
-  for feed in feeds:
+  for feed_entry in feeds:
+  
+    feed = feedparser.parse(feed_entry['url'])
 
-    # Extract the torrent url from the feed
-    torrent_fn = get_torrent_url(feed['url'])
-        
-    # Check if we have this torrent already
+    for item in feed["items"]:  
+      torrent_url = item['links'][1]['href']
+      
+      if re.search('XviD',torrent_url) and re.search('ettv',torrent_url):
+         break
 
+    torrent_fn = torrent_url.split('/')[-1] 
+    print torrent_fn
 
 
   sys.exit()
