@@ -83,6 +83,10 @@ def main():
     cmd = 'transmission-remote -a %s' % full_torrent_fn
     print cmd
     os.system(cmd) 
+
+    f = open(history_fn,'w')
+    f.write(torrent_fn)
+    f.close
   
 
 if __name__ == "__main__":
