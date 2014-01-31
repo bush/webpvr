@@ -30,7 +30,7 @@ def main():
   # TODO: Add all failure paths
   TVDIR = "/media/windowsshare/downloads/completed/TV"
   FEEDS = [
-      {'site': 'extratorrent', 'show': 'Modern Family', 'encoding': 'XviD', 'signature': 'ettv', 'url': 'http://extratorrent.cc/rss.xml?type=last&cid=632'},
+      {'site': 'extratorrent', 'show': 'ModernFamily', 'encoding': 'XviD', 'signature': 'ettv', 'url': 'http://extratorrent.cc/rss.xml?type=last&cid=632'},
       ]
 
   for feed_entry in FEEDS:
@@ -55,22 +55,35 @@ def main():
         pass
       else: raise
     
+    # Touch the history file
+    history_fn = os.path.join(path,'history')
+    open(history_fn, 'a').close()
+
     # Move on if we already downloaded the torrent file
-    if os.path.isfile(os.path.join(path,torrent_fn))
+    if torrent_fn in open(history_fn).read():
       print "We already got this one, moving on ..."
       continue
 
+    
+    # Move on if we already downloaded the torrent file
+    #if os.path.isfile(os.path.join(path,torrent_fn)):
+    #  print "We already got this one, moving on ..."
+    #  continue
+
     # Download the torrent
-    response = urllib2.urlopen(torrenturl)
+    response = urllib2.urlopen(torrent_url)
     html = response.read()
-    f = open(os.path.join(path,torrentfn),'w')
+    full_torrent_fn = os.path.join(path,'lastest.torrent')
+    f = open(os.path.join(path,full_torrent_fn),'w')
     f.write(html)
     f.close
 
-   # Add the torrent
-   cmd = 'transmission-remote -a %s' % os.path.join(path,torrentfn)
-   print cmd
-   #os.system(cmd) 
+    # Add the torrent
+    # TBD - file path does not seem to be accecpted by transmission
+    cmd = 'transmission-remote -a %s' % full_torrent_fn
+    print cmd
+    os.system(cmd) 
+  
 
 if __name__ == "__main__":
     main()
