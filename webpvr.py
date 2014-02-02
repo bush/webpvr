@@ -56,7 +56,7 @@ def main():
       else: raise
     
     # Touch the history file
-    history_fn = os.path.join(path,'history')
+    history_fn = os.path.join(TVDIR,'history')
     open(history_fn, 'a').close()
 
     # Move on if we already downloaded the torrent file
@@ -64,7 +64,6 @@ def main():
       print "We already got this one, moving on ..."
       continue
 
-    
     # Move on if we already downloaded the torrent file
     #if os.path.isfile(os.path.join(path,torrent_fn)):
     #  print "We already got this one, moving on ..."
