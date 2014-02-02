@@ -4,6 +4,7 @@ import urllib2
 import re
 import sys, os, errno
 import feedparser
+from subprocess import call
 
 # Unused, replaced with the feedparser module
 def get_torrent_url(feedurl):
@@ -25,12 +26,24 @@ def get_torrent_url(feedurl):
   else:
     return "none"
 
+# Unused
+def download_torrent(url):
+  response = urllib2.urlopen(torrent_url)
+  html = response.read()
+  full_torrent_fn = os.path.join(path,'lastest.torrent')
+  f = open(os.path.join(path,full_torrent_fn),'w')
+  f.write(html)
+  f.close
+
+
+
+
 def main():
  
   # TODO: Add all failure paths
   TVDIR = "/media/windowsshare/downloads/completed/TV"
   FEEDS = [
-      {'site': 'extratorrent', 'show': 'ModernFamily', 'encoding': 'XviD', 'signature': 'ettv', 'url': 'http://extratorrent.cc/rss.xml?type=last&cid=632'},
+      {'site': 'extratorrent', 'show': 'Modern Family', 'encoding': 'XviD', 'signature': 'ettv', 'url': 'http://extratorrent.cc/rss.xml?type=last&cid=632'},
       ]
 
   for feed_entry in FEEDS:
@@ -47,7 +60,7 @@ def main():
     torrent_fn = torrent_url.split('/')[-1] 
 
     # Create the torrent directory if it does not exist
-    path = os.path.join(TVDIR,os.path.join(feed_entry['show'],'torrents'))
+    path = os.path.join(TVDIR,feed_entry['show'])
     try:
       os.makedirs(path)
     except OSError as exc: # Python >2.5
@@ -64,24 +77,14 @@ def main():
       print "We already got this one, moving on ..."
       continue
 
-    # Move on if we already downloaded the torrent file
-    #if os.path.isfile(os.path.join(path,torrent_fn)):
-    #  print "We already got this one, moving on ..."
-    #  continue
+    cmd = ['transmission-remote','-w',path,'-a',torrent_url]
 
-    # Download the torrent
-    response = urllib2.urlopen(torrent_url)
-    html = response.read()
-    full_torrent_fn = os.path.join(path,'lastest.torrent')
-    f = open(os.path.join(path,full_torrent_fn),'w')
-    f.write(html)
-    f.close
-
-    # Add the torrent
-    # TBD - file path does not seem to be accecpted by transmission
-    cmd = 'transmission-remote -a %s' % full_torrent_fn
-    print cmd
-    os.system(cmd) 
+    try:
+      devnull = open('/dev/null', 'w')
+      retcode = call(cmd,stdout=devnull, stderr=devnull)
+      devnull.close
+    except OSError, msg:
+      quit("Could not execute the above command: %s\n" % cmd)
 
     f = open(history_fn,'w')
     f.write(torrent_fn)
