@@ -50,14 +50,17 @@ def main():
   
     # Extract the torrent url
     feed = feedparser.parse(feed_entry['url'])
+
+    if feed.bozo:
+      print "There is something wrong with this feed.  Maybe the site is down ..."
+      continue
+
     for item in feed["items"]:  
 
       torrent_url = item['links'][1]['href']
       
       if re.search(feed_entry['encoding'],torrent_url) and re.search(feed_entry['signature'],torrent_url):
          break
-
-    torrent_fn = torrent_url.split('/')[-1] 
 
     # Create the torrent directory if it does not exist
     path = os.path.join(TVDIR,feed_entry['show'])
