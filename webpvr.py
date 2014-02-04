@@ -44,6 +44,7 @@ def main():
   TVDIR = "/media/windowsshare/downloads/completed/TV"
   FEEDS = [
       {'site': 'extratorrent', 'show': 'Modern Family', 'encoding': 'XviD', 'signature': 'ettv', 'url': 'http://extratorrent.cc/rss.xml?type=last&cid=632'},
+      {'site': 'extratorrent', 'show': 'The Big Bang Theory', 'encoding': 'XviD', 'signature': 'ettv', 'url': 'http://extratorrent.cc/rss.xml?cid=583&type=last'},
       ]
 
   for feed_entry in FEEDS:
@@ -51,9 +52,10 @@ def main():
     # Extract the torrent url
     feed = feedparser.parse(feed_entry['url'])
 
-    if feed.bozo:
-      print "There is something wrong with this feed.  Maybe the site is down ..."
-      continue
+    #print feed
+    #if feed.bozo:
+    #  print "There is something wrong with this feed.  Maybe the site is down ..."
+    #  continue
 
     for item in feed["items"]:  
 
@@ -76,7 +78,7 @@ def main():
     open(history_fn, 'a').close()
 
     # Move on if we already downloaded the torrent file
-    if torrent_fn in open(history_fn).read():
+    if torrent_url in open(history_fn).read():
       print "We already got this one, moving on ..."
       continue
 
@@ -90,7 +92,7 @@ def main():
       quit("Could not execute the above command: %s\n" % cmd)
 
     f = open(history_fn,'w')
-    f.write(torrent_fn)
+    f.write(torrent_url)
     f.close
   
 
