@@ -41,6 +41,7 @@ def download_torrent(url):
 def main():
  
   # TODO: Add all failure paths
+  DEBUG = 1 
   TVDIR = "/media/windowsshare/downloads/completed/TV"
   FEEDS = [
       {'site': 'extratorrent', 'show': 'Modern Family', 'encoding': 'XviD', 'signature': 'ettv', 'url': 'http://extratorrent.cc/rss.xml?type=last&cid=632'},
@@ -62,6 +63,8 @@ def main():
       torrent_url = item['links'][1]['href']
       
       if re.search(feed_entry['encoding'],torrent_url) and re.search(feed_entry['signature'],torrent_url):
+         if DEBUG:
+           print "Found torrent: %s" % torrent_url
          break
 
     # Create the torrent directory if it does not exist
@@ -75,10 +78,10 @@ def main():
     
     # Touch the history file
     history_fn = os.path.join(TVDIR,'history')
-    open(history_fn, 'a').close()
+    f = open(history_fn, 'a+')
 
     # Move on if we already downloaded the torrent file
-    if torrent_url in open(history_fn).read():
+    if torrent_url in f.read():
       print "We already got this one, moving on ..."
       continue
 
@@ -86,14 +89,15 @@ def main():
 
     try:
       devnull = open('/dev/null', 'w')
+      if DEBUG:
+        print "Adding torrent %s" % torrent_url
       retcode = call(cmd,stdout=devnull, stderr=devnull)
+      f.write("%s\n" % torrent_url)
+      f.close
       devnull.close
     except OSError, msg:
       quit("Could not execute the above command: %s\n" % cmd)
 
-    f = open(history_fn,'w')
-    f.write(torrent_url)
-    f.close
   
 
 if __name__ == "__main__":
