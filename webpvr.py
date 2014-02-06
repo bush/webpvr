@@ -6,6 +6,8 @@ import sys, os, errno
 import feedparser
 from subprocess import call
 
+DEBUG = 1 
+
 # Unused, replaced with the feedparser module
 def get_torrent_url(feedurl):
   response = urllib2.urlopen(feedurl)
@@ -36,36 +38,43 @@ def download_torrent(url):
   f.close
 
 
+def read_rss_feed(url,encoding,signature):
+  # Extract the torrent url
+  feed = feedparser.parse(url)
 
+  #if feed.bozo:
+  #  print "There is something wrong with this feed.  Maybe the site is down ..."
+  #  print feed.bozo
+  #  return feed.bozo    
+
+  for item in feed["items"]:  
+
+    torrent_url = item['links'][1]['href']
+
+    if re.search(encoding,torrent_url) and re.search(signature,torrent_url):
+      if DEBUG:
+        print "Found torrent: %s" % torrent_url
+      return torrent_url 
+
+  return "none" 
 
 def main():
  
   # TODO: Add all failure paths
-  DEBUG = 1 
   TVDIR = "/media/windowsshare/downloads/completed/TV"
   FEEDS = [
-      {'site': 'extratorrent', 'show': 'Modern Family', 'encoding': 'XviD', 'signature': 'ettv', 'url': 'http://extratorrent.cc/rss.xml?type=last&cid=632'},
-      {'site': 'extratorrent', 'show': 'The Big Bang Theory', 'encoding': 'XviD', 'signature': 'ettv', 'url': 'http://extratorrent.cc/rss.xml?cid=583&type=last'},
+      {'type': 'rss', 'show': 'Modern Family', 'encoding': 'XviD', 'signature': 'ettv', 'url': 'http://extratorrent.cc/rss.xml?type=last&cid=632'},
+      #{'type': 'rss', 'show': 'The Big Bang Theory', 'encoding': 'XviD', 'signature': 'ettv', 'url': 'http://extratorrent.cc/rss.xml?cid=583&type=last'},
+      #{'type': 'html', 'show': 'The Big Bang Theory', 'encoding': 'x264', 'signature': 'eztv', 'url': 'http://eztv.it/shows/23/the-big-bang-theory/'},
       ]
 
   for feed_entry in FEEDS:
   
-    # Extract the torrent url
-    feed = feedparser.parse(feed_entry['url'])
-
-    #print feed
-    #if feed.bozo:
-    #  print "There is something wrong with this feed.  Maybe the site is down ..."
-    #  continue
-
-    for item in feed["items"]:  
-
-      torrent_url = item['links'][1]['href']
-      
-      if re.search(feed_entry['encoding'],torrent_url) and re.search(feed_entry['signature'],torrent_url):
-         if DEBUG:
-           print "Found torrent: %s" % torrent_url
-         break
+    torrent_url = read_rss_feed(feed_entry['url'],feed_entry['encoding'],feed_entry['signature'])
+    if torrent_url == "none":
+      if DEBUG:
+        print "No matching torrent found"
+      continue
 
     # Create the torrent directory if it does not exist
     path = os.path.join(TVDIR,feed_entry['show'])
@@ -91,7 +100,7 @@ def main():
       devnull = open('/dev/null', 'w')
       if DEBUG:
         print "Adding torrent %s" % torrent_url
-      retcode = call(cmd,stdout=devnull, stderr=devnull)
+      #retcode = call(cmd,stdout=devnull, stderr=devnull)
       f.write("%s\n" % torrent_url)
       f.close
       devnull.close
