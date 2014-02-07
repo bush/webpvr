@@ -6,7 +6,7 @@ import sys, os, errno
 import feedparser
 from subprocess import call
 
-DEBUG = 1 
+DEBUG = 0 
 
 # Unused, replaced with the feedparser module
 def get_torrent_url(feedurl):
@@ -58,19 +58,39 @@ def read_rss_feed(url,encoding,signature):
 
   return "none" 
 
+def read_html_feed(url,encoding,signature):
+  
+  response = urllib2.urlopen(url)
+  html = response.read()
+  list = re.findall(r'href="(magnet:[^"]*)"',html)
+  for item in list:
+    if re.search(encoding,item) and re.search(signature,item):
+      return item
+  return "none"
+
 def main():
  
   # TODO: Add all failure paths
   TVDIR = "/media/windowsshare/downloads/completed/TV"
   FEEDS = [
       {'type': 'rss', 'show': 'Modern Family', 'encoding': 'XviD', 'signature': 'ettv', 'url': 'http://extratorrent.cc/rss.xml?type=last&cid=632'},
-      #{'type': 'rss', 'show': 'The Big Bang Theory', 'encoding': 'XviD', 'signature': 'ettv', 'url': 'http://extratorrent.cc/rss.xml?cid=583&type=last'},
+      {'type': 'html', 'show': 'The Big Bang Theory', 'encoding': 'x264', 'signature': 'LOL', 'url': 'https://thepiratebay.se/search/the%20big%20bang%20theory/0/7/0'},
       #{'type': 'html', 'show': 'The Big Bang Theory', 'encoding': 'x264', 'signature': 'eztv', 'url': 'http://eztv.it/shows/23/the-big-bang-theory/'},
       ]
 
   for feed_entry in FEEDS:
   
-    torrent_url = read_rss_feed(feed_entry['url'],feed_entry['encoding'],feed_entry['signature'])
+    torrent_url = "none"
+
+    if feed_entry['type'] == "rss":
+      if DEBUG:
+        print "Processing rss feed ..."
+      torrent_url = read_rss_feed(feed_entry['url'],feed_entry['encoding'],feed_entry['signature'])
+    elif feed_entry['type'] == "html":
+      if DEBUG:
+        print "Processing html feed ..."
+      torrent_url = read_html_feed(feed_entry['url'],feed_entry['encoding'],feed_entry['signature'])
+
     if torrent_url == "none":
       if DEBUG:
         print "No matching torrent found"
@@ -91,7 +111,8 @@ def main():
 
     # Move on if we already downloaded the torrent file
     if torrent_url in f.read():
-      print "We already got this one, moving on ..."
+      if DEBUG:
+        print "We already got this one, moving on ..."
       continue
 
     cmd = ['transmission-remote','-w',path,'-a',torrent_url]
@@ -100,7 +121,7 @@ def main():
       devnull = open('/dev/null', 'w')
       if DEBUG:
         print "Adding torrent %s" % torrent_url
-      #retcode = call(cmd,stdout=devnull, stderr=devnull)
+      retcode = call(cmd,stdout=devnull, stderr=devnull)
       f.write("%s\n" % torrent_url)
       f.close
       devnull.close
