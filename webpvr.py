@@ -150,7 +150,7 @@ def get_movie_list():
     movie = row['Title']
     score = int(row['T-Meter'].strip('%'))
 
-    if score > 80:
+    if score >= 80:
       #print "|%s|" % row['Title']
       #print "|%s|" % score 
       # Move on if we already downloaded the torrent file
